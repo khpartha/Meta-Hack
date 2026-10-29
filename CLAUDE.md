@@ -36,6 +36,15 @@ Limits: max 4 loop iterations, max 3 SAM calls per inspection.
 - Each finding: `category, severity, observation, evidence, object, bounding_box, requires_human_review, recommendation`.
 - Keep it simple. No auth, no video, no CCTV, no custom training.
 
+## API contract (backend <-> frontend)
+- `POST /api/inspect` with multipart field `image` (JPEG/PNG/WEBP, max 10 MB). Returns `InspectionReport` (see `backend/app/schemas.py`).
+- `?mock=hazards` or `?mock=clean` returns a canned report (no API calls) with boxes rescaled to the uploaded image. Use this for frontend work. Without `mock`, returns 501 until the real pipeline lands.
+- Report: `inspection_id, created_at, image_width, image_height, status ("possible_hazards_found" | "no_hazards_found"), scene_description, summary, findings[], disclaimer, models`.
+- `image_width/height` are after EXIF rotation, i.e. what the browser displays. Scale boxes by displayed_width / image_width.
+- `bounding_box` can be `null` (SAM could not localize it). Show these findings in the list without a box.
+- Errors: 400 bad image, 413 too large, 422 missing field or bad `mock` value, 501 real mode not ready.
+- Changing the shape? Update `schemas.py`, the fixtures in `backend/app/fixtures/`, and this section, and tell your teammate.
+
 ## Dev environment (Windows)
 - Backend: `cd backend`, `python -m venv .venv`, `.venv\Scripts\activate`, `pip install -r requirements.txt`, `uvicorn app.main:app --reload --port 8000`
 - Frontend: `cd frontend`, `npm install`, `npm run dev` (port 5173)
