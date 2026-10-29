@@ -14,10 +14,16 @@
       "object": "pile of cardboard boxes and plastic crates",
       "observation": "Open and closed boxes, a blue plastic crate and loose items sit directly on the floor, narrowing the central passage.",
       "evidence": "Center foreground, in front of the black shelving unit next to the mirrored pillar.",
-      "bounding_box": [428, 669, 792, 942],
+      "bounding_box": [
+        428,
+        669,
+        792,
+        942
+      ],
       "confidence": 0.77,
       "requires_human_review": true,
-      "recommendation": "Move the boxes and crate onto shelving or a marked staging area and keep the central passage clear."
+      "recommendation": "Move the boxes and crate onto shelving or a marked staging area and keep the central passage clear.",
+      "localization": "sam"
     },
     {
       "id": 1,
@@ -26,10 +32,16 @@
       "object": "tall stack of cardboard boxes by mirrored pillar",
       "observation": "A stack four boxes high stands on the floor and protrudes into the walkway.",
       "evidence": "Right of center, next to the mirrored column.",
-      "bounding_box": [1085, 570, 1226, 856],
+      "bounding_box": [
+        1085,
+        570,
+        1226,
+        856
+      ],
       "confidence": 0.75,
       "requires_human_review": true,
-      "recommendation": "Relocate the stack out of the travel path; tall stacks should also be checked for stability."
+      "recommendation": "Relocate the stack out of the travel path; tall stacks should also be checked for stability.",
+      "localization": "sam"
     },
     {
       "id": 2,
@@ -38,10 +50,16 @@
       "object": "boxes and bags piled along right side",
       "observation": "Assorted boxes, plastic bags and packages are piled on the floor along the right edge, narrowing the passage.",
       "evidence": "Bottom right and mid-right of the image, along the wall.",
-      "bounding_box": [1286, 770, 1600, 1059],
+      "bounding_box": [
+        1286,
+        770,
+        1600,
+        1059
+      ],
       "confidence": 0.76,
       "requires_human_review": true,
-      "recommendation": "Clear the items from the floor along the wall or store them in a designated area."
+      "recommendation": "Clear the items from the floor along the wall or store them in a designated area.",
+      "localization": "sam"
     },
     {
       "id": 3,
@@ -53,8 +71,13 @@
       "bounding_box": null,
       "confidence": null,
       "requires_human_review": true,
-      "recommendation": "Return cleaning equipment to its storage location after use."
+      "recommendation": "Return cleaning equipment to its storage location after use.",
+      "localization": "none"
     }
   ],
-  "models": {"reasoning": "muse-spark-1.3", "segmentation": "sam-3.1", "mode": "mock"}
+  "models": {
+    "reasoning": "muse-spark-1.3",
+    "segmentation": "sam-3.1",
+    "mode": "mock"
+  }
 }

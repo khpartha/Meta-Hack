@@ -22,13 +22,18 @@ MVP hazard category: **walkway obstruction only**. PPE and floor clutter come la
 - Segmentation model: `sam-3.1` (text prompt like "cardboard boxes" → boxes + masks).
 - Before writing SAM integration code, check the official docs / `github.com/meta-models/meta-sam` for the exact request and response format (image as base64 vs URL, box format). Don't guess.
 
-## Agent design
-Muse Spark runs a tool-calling loop with three tools:
-1. `segment_object(prompt)` → calls SAM 3.1, returns boxes
-2. `check_safety_rule(category, evidence)` → checks against rules in `backend/app/rules.py`
-3. `create_inspection_report(findings)` → final structured output, ends the loop
+## Pipeline (v1, live) and agent design (later)
+v1 is a fixed pipeline in `backend/app/pipeline.py`, because SAM 3.1 returns EVERY instance of a noun
+("cardboard box" -> 36 boxes in a cluttered scene) and long descriptive prompts usually return 0
+(see `scripts/test_sam_prompts.py`):
+1. detect: Muse lists findings, each with 1-2 short SAM nouns and a rough `approx_box`
+2. segment: SAM runs the unique nouns in parallel (max 5 calls) -> numbered candidate boxes
+3. verify: Muse sees the candidates drawn on the image and picks which belong to each finding; can dismiss findings
+4. merge: union of picked boxes (`localization: "sam"`), else Muse's box (`"approximate"`), else null (`"none"`)
+Rules in `rules.py` are applied in code after the models. Eval: `python scripts/run_pipeline.py` -> `backend/data/pipeline_runs/`.
 
-Limits: max 4 loop iterations, max 3 SAM calls per inspection.
+The tool-calling agent (segment_object / check_safety_rule / create_inspection_report, max 4 iterations)
+is a later upgrade that wraps the same pieces; build it only once v1 is solid.
 
 ## Conventions
 - Bounding boxes from the backend are always `[x1, y1, x2, y2]` in ORIGINAL image pixels. The frontend scales to display size.
@@ -37,12 +42,13 @@ Limits: max 4 loop iterations, max 3 SAM calls per inspection.
 - Keep it simple. No auth, no video, no CCTV, no custom training.
 
 ## API contract (backend <-> frontend)
-- `POST /api/inspect` with multipart field `image` (JPEG/PNG/WEBP, max 10 MB). Returns `InspectionReport` (see `backend/app/schemas.py`).
-- `?mock=hazards` or `?mock=clean` returns a canned report (no API calls) with boxes rescaled to the uploaded image. Use this for frontend work. Without `mock`, returns 501 until the real pipeline lands.
-- Report: `inspection_id, created_at, image_width, image_height, status ("possible_hazards_found" | "no_hazards_found"), scene_description, summary, findings[], disclaimer, models`.
+- `POST /api/inspect` with multipart field `image` (JPEG/PNG/WEBP, max 10 MB). Returns `InspectionReport` (see `backend/app/schemas.py`). Live calls take ~tens of seconds: show a loading state.
+- `?mock=hazards` or `?mock=clean` returns a canned report (no API calls) with boxes rescaled to the uploaded image. Use this for frontend work.
+- `GET /api/inspections/{inspection_id}` returns a saved live report.
+- Report: `inspection_id, created_at, image_width, image_height, status ("possible_hazards_found" | "no_hazards_found"), scene_description, summary, findings[], disclaimer, models, timings_ms`.
 - `image_width/height` are after EXIF rotation, i.e. what the browser displays. Scale boxes by displayed_width / image_width.
-- `bounding_box` can be `null` (SAM could not localize it). Show these findings in the list without a box.
-- Errors: 400 bad image, 413 too large, 422 missing field or bad `mock` value, 501 real mode not ready.
+- Finding `localization`: `"sam"` = precise box (solid), `"approximate"` = Muse's rough box (draw dashed), `"none"` = `bounding_box` is null, show in the list only.
+- Errors: 400 bad image, 413 too large, 422 missing field or bad `mock` value, 500 server missing API key, 502 Meta API failed.
 - Changing the shape? Update `schemas.py`, the fixtures in `backend/app/fixtures/`, and this section, and tell your teammate.
 
 ## Dev environment (Windows)
@@ -55,12 +61,19 @@ Limits: max 4 loop iterations, max 3 SAM calls per inspection.
 backend/
   app/
     main.py        # FastAPI app, POST /api/inspect, GET /api/health
-    meta_client.py # Muse Spark + SAM calls
-    agent.py       # tool-calling loop
+    config.py      # settings from .env
+    images.py      # upload validation, EXIF rotation
+    meta_client.py # async Muse Spark + SAM calls
+    pipeline.py    # detect -> segment -> verify -> merge
+    agent.py       # tool-calling loop (later)
     rules.py       # safety rules
-    schemas.py     # Pydantic models
+    schemas.py     # Pydantic models (API contract)
+    fixtures/      # mock reports
+  tests/           # pytest, uses a fake Meta client (no API calls)
   scripts/
-    test_api.py    # standalone smoke test for Muse Spark + SAM
+    test_api.py          # standalone smoke test for Muse Spark + SAM
+    test_sam_prompts.py  # SAM prompt-style experiment
+    run_pipeline.py      # run the real pipeline on test_images, save annotated results
   data/
   .env             # gitignored
   .env.example

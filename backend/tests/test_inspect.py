@@ -39,6 +39,7 @@ def test_mock_hazards_native_size_keeps_fixture_boxes():
     assert (body["image_width"], body["image_height"]) == (1600, 1059)
     assert body["findings"][0]["bounding_box"] == [428, 669, 792, 942]
     assert body["findings"][3]["bounding_box"] is None
+    assert [f["localization"] for f in body["findings"]] == ["sam", "sam", "sam", "none"]
     assert all(f["requires_human_review"] for f in body["findings"])
     assert body["inspection_id"].startswith("mock-")
 
@@ -64,8 +65,30 @@ def test_exif_rotation_swaps_reported_size():
     assert (body["image_width"], body["image_height"]) == (500, 1000)
 
 
-def test_real_mode_not_implemented_yet():
-    assert post(jpeg(100, 100)).status_code == 501
+def test_live_mode_runs_pipeline_and_saves(monkeypatch, tmp_path):
+    from app import config, main
+    from .fakes import FakeMeta, finding
+
+    fake = FakeMeta(detect={"scene_description": "s", "findings": [finding(box=(10, 10, 60, 60))]})
+    monkeypatch.setattr(main, "_meta_client", fake)
+    monkeypatch.setattr(config, "INSPECTIONS_DIR", tmp_path)
+    r = post(jpeg(200, 100))
+    assert r.status_code == 200
+    body = r.json()
+    assert body["models"]["mode"] == "live" and body["findings"][0]["localization"] == "approximate"
+    again = client.get(f"/api/inspections/{body['inspection_id']}")
+    assert again.status_code == 200 and again.json() == body
+    assert client.get("/api/inspections/../../etc").status_code == 404
+    assert client.get("/api/inspections/000000000000").status_code == 404
+
+
+def test_live_mode_model_error_is_502(monkeypatch):
+    from app import main
+    from .fakes import FakeMeta
+
+    monkeypatch.setattr(main, "_meta_client", FakeMeta(detect={}, fail_muse=True))
+    r = post(jpeg(100, 100))
+    assert r.status_code == 502 and "Model API error" in r.json()["detail"]
 
 
 def test_bad_mock_value():

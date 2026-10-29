@@ -34,6 +34,11 @@ class Finding(BaseModel):
         default=None,
         description="[x1, y1, x2, y2] original pixels; null if SAM could not localize it",
     )
+    localization: Literal["sam", "approximate", "none"] = Field(
+        default="none",
+        description="sam = box from SAM 3.1; approximate = Muse's rough estimate "
+        "(draw dashed); none = no box",
+    )
     confidence: Optional[float] = Field(default=None, ge=0, le=1, description="SAM confidence")
     requires_human_review: bool = True
     recommendation: str
@@ -50,3 +55,4 @@ class InspectionReport(BaseModel):
     findings: list[Finding]
     disclaimer: str = DISCLAIMER
     models: dict[str, str] = Field(description="Model names used, e.g. {'reasoning': 'muse-spark-1.3'}")
+    timings_ms: dict[str, int] = Field(default_factory=dict, description="Per-step latency")
