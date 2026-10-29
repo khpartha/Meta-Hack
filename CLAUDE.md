@@ -1,62 +1,68 @@
-# SceneGuard AI
+I'm joining a hackathon project as a second developer. Help me get set up and start contributing.
 
-AI-assisted visual safety inspection for warehouses. User uploads a workplace image, the agent finds possible hazards, localizes them, and returns an annotated inspection report. Hackathon deadline: Nov 4, 2026.
+PROJECT: SceneGuard AI
+An AI-assisted visual safety inspection tool for warehouses. A user uploads a workplace photo; an AI agent looks for possible hazards, locates the relevant objects, and returns an annotated inspection report with findings, bounding boxes, and recommended actions. It's framed as an inspection assistant, not a certified compliance system: every finding is a "possible" hazard that needs human review, and the app must never claim a hazard without visual evidence.
 
-This is an AI-assisted inspection tool, NOT a certified compliance system. Every finding is a "possible" hazard that needs human review. Never claim a hazard exists without visual evidence.
+Deadline: Nov 4, 2026. MVP hazard category: walkway obstruction only.
 
-## Today's goal (Oct 29)
-Prove the core loop works end to end:
-Upload image → Muse Spark analysis → SAM 3.1 localization → boxes drawn on image → JSON report.
-MVP hazard category: **walkway obstruction only**. PPE and floor clutter come later.
+REPO: https://github.com/khpartha/Meta-Hack
+Read CLAUDE.md in the repo root first. It's the source of truth for architecture, conventions, and folder layout.
 
-## Stack
-- `backend/`: Python 3.11+, FastAPI, Uvicorn, OpenAI Python SDK (Meta Model API is OpenAI-compatible), Pillow, python-dotenv, httpx
-- `frontend/`: React + TypeScript + Vite + Tailwind
-- No database. Store inspection results as JSON files in `backend/data/` for now.
-- Deploy later: frontend on Netlify, backend on Render.
+STACK
+- backend/: Python 3.11+, FastAPI, OpenAI Python SDK pointed at Meta Model API (https://api.meta.ai/v1), Pillow
+- frontend/: React + TypeScript + Vite + Tailwind
+- AI: Meta Muse Spark 1.3 (scene reasoning, tool calling) + SAM 3.1 (object segmentation from a text prompt)
+- No database; JSON files for now.
 
-## Meta Model API
-- Base URL: `https://api.meta.ai/v1`
-- Key in `backend/.env` as `META_API_KEY`. Never commit `.env`. Never print the key.
-- Reasoning model: `muse-spark-1.3` (do not use the `-contributor` variants; they let Meta use our images).
-- Segmentation model: `sam-3.1` (text prompt like "cardboard boxes" → boxes + masks).
-- Before writing SAM integration code, check the official docs / `github.com/meta-models/meta-sam` for the exact request and response format (image as base64 vs URL, box format). Don't guess.
+HOW IT WORKS
+POST /api/inspect receives an image → Muse Spark runs an agent loop with three tools: segment_object (calls SAM), check_safety_rule, create_inspection_report → returns structured JSON. Max 4 loop steps, max 3 SAM calls.
 
-## Agent design
-Muse Spark runs a tool-calling loop with three tools:
-1. `segment_object(prompt)` → calls SAM 3.1, returns boxes
-2. `check_safety_rule(category, evidence)` → checks against rules in `backend/app/rules.py`
-3. `create_inspection_report(findings)` → final structured output, ends the loop
+CURRENT STATUS (Oct 29)
+- Done: repo set up, FastAPI backend with GET /api/health, React frontend that calls it and shows "Backend: ok".
+- In progress: Meta API key and billing; smoke-testing Muse Spark and SAM with backend/scripts/test_api.py.
+- Next: the agent loop and /api/inspect endpoint (backend), then the results UI (frontend).
 
-Limits: max 4 loop iterations, max 3 SAM calls per inspection.
+THE CONTRACT BETWEEN FRONTEND AND BACKEND
+POST /api/inspect (multipart, field "image") returns:
+{
+  "inspection_id": "string",
+  "status": "review_required" | "no_findings",
+  "image_width": number,
+  "image_height": number,
+  "findings": [
+    {
+      "category": "walkway_obstruction",
+      "severity": "low" | "medium" | "high",
+      "observation": "string",
+      "evidence": "string",
+      "object": "string",
+      "bounding_box": [x1, y1, x2, y2],
+      "requires_human_review": boolean,
+      "recommendation": "string"
+    }
+  ]
+}
+bounding_box is always in ORIGINAL image pixels; the frontend scales it to the displayed image size.
 
-## Conventions
-- Bounding boxes from the backend are always `[x1, y1, x2, y2]` in ORIGINAL image pixels. The frontend scales to display size.
-- Ask Muse Spark for structured JSON, validate with Pydantic models in `backend/app/schemas.py`.
-- Each finding: `category, severity, observation, evidence, object, bounding_box, requires_human_review, recommendation`.
-- Keep it simple. No auth, no video, no CCTV, no custom training.
+MY ROLE: FRONTEND
+1. Image upload (drag-and-drop + file picker, preview).
+2. Call POST /api/inspect, show a loading/progress state (the agent can take 10–30 seconds).
+3. Draw bounding boxes over the image, scaled correctly, labeled by finding.
+4. Show findings as cards: category, severity badge, observation, evidence, recommendation, "needs human review" tag.
+5. Handle "no findings" and error states clearly.
+Until the real endpoint exists, build against a mock: create frontend/src/mocks/inspection.json matching the contract above, with a toggle to switch between mock and real API.
 
-## Dev environment (Windows)
-- Backend: `cd backend`, `python -m venv .venv`, `.venv\Scripts\activate`, `pip install -r requirements.txt`, `uvicorn app.main:app --reload --port 8000`
-- Frontend: `cd frontend`, `npm install`, `npm run dev` (port 5173)
-- CORS: backend allows `http://localhost:5173`.
+TEAM WORKFLOW
+- My teammate works on the backend; I work on the frontend.
+- I work on a branch (e.g. frontend-ui), never directly on main.
+- Before starting each session: git pull origin main, then merge main into my branch.
+- Commit small and often; open a pull request to main when a piece works.
+- Never commit .env or API keys. The key goes only in backend/.env (already gitignored).
+- If I change the API contract or architecture, update CLAUDE.md in the same commit so we stay in sync.
 
-## Layout
-```
-backend/
-  app/
-    main.py        # FastAPI app, POST /api/inspect, GET /api/health
-    meta_client.py # Muse Spark + SAM calls
-    agent.py       # tool-calling loop
-    rules.py       # safety rules
-    schemas.py     # Pydantic models
-  scripts/
-    test_api.py    # standalone smoke test for Muse Spark + SAM
-  data/
-  .env             # gitignored
-  .env.example
-  requirements.txt
-frontend/
-  src/
-test_images/       # demo images: 5-6 obvious obstructions + 1 clean scene
-```
+SETUP (Windows)
+1. git clone https://github.com/khpartha/Meta-Hack.git
+2. Backend: cd backend, python -m venv .venv, .venv\Scripts\activate, pip install -r requirements.txt, copy .env.example to .env (teammate will share the key privately), uvicorn app.main:app --reload --port 8000
+3. Frontend: cd frontend, npm install, npm run dev → http://localhost:5173
+
+Start by helping me clone and run the project, confirm I see "Backend: ok" on the page, then create my branch and build the mock-driven upload + results UI.
