@@ -1,1 +1,62 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-ink: #0a0d14;
+  --color-panel: #111621;
+  --color-line: #1f2633;
+  --color-safety: #facc15;
+  --color-safety-dim: #ca8a04;
+}
+
+html {
+  background-color: var(--color-ink);
+  color: #d1d5db;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Surveillance-monitor backdrop: a slowly drifting grid plus faint scanlines. */
+.monitor-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  background-color: var(--color-ink);
+}
+
+.monitor-bg::before {
+  content: "";
+  position: absolute;
+  inset: -48px;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: grid-drift 24s linear infinite;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 80%);
+}
+
+.monitor-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, transparent 0%, rgb(250 204 21 / 0.04) 50%, transparent 100%) 0 0 / 100% 240px no-repeat,
+    repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.18) 0 1px, transparent 1px 3px);
+  animation: scan-sweep 9s linear infinite;
+}
+
+@keyframes grid-drift {
+  to { transform: translate(48px, 48px); }
+}
+
+@keyframes scan-sweep {
+  from { background-position: 0 -240px, 0 0; }
+  to { background-position: 0 100vh, 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .monitor-bg::before,
+  .monitor-bg::after { animation: none; }
+}
