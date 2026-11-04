@@ -1,0 +1,67 @@
+{
+  "inspection_id": "mock-video",
+  "media_type": "video",
+  "status": "review_required",
+  "frame_width": 1280,
+  "frame_height": 720,
+  "duration_sec": 32,
+  "frames": [
+    { "timestamp_sec": 2, "findings": [] },
+    {
+      "timestamp_sec": 6.5,
+      "findings": [
+        {
+          "category": "walkway_obstruction",
+          "severity": "medium",
+          "observation": "A hand cart has been left in the aisle.",
+          "evidence": "The cart stands in the middle of the travel path with no one using it.",
+          "object": "hand cart",
+          "bounding_box": [700, 380, 960, 650],
+          "requires_human_review": true,
+          "recommendation": "Park the cart in a marked parking area off the aisle."
+        }
+      ]
+    },
+    {
+      "timestamp_sec": 14,
+      "findings": [
+        {
+          "category": "walkway_obstruction",
+          "severity": "high",
+          "observation": "Boxes are stacked across the pedestrian walkway.",
+          "evidence": "The stack covers the marked walkway between the yellow floor lines.",
+          "object": "stacked cardboard boxes",
+          "bounding_box": [300, 330, 620, 700],
+          "requires_human_review": true,
+          "recommendation": "Clear the walkway and move the boxes to racking or a staging zone."
+        },
+        {
+          "category": "walkway_obstruction",
+          "severity": "low",
+          "observation": "Loose packaging is on the floor near the walkway edge.",
+          "evidence": "Strips of packaging material are visible next to the floor line.",
+          "object": "loose packaging",
+          "bounding_box": [90, 600, 260, 700],
+          "requires_human_review": true,
+          "recommendation": "Pick up the packaging and put it in a waste bin."
+        }
+      ]
+    },
+    {
+      "timestamp_sec": 22.5,
+      "findings": [
+        {
+          "category": "walkway_obstruction",
+          "severity": "high",
+          "observation": "A loaded pallet is blocking most of the aisle.",
+          "evidence": "The pallet takes up the aisle width, leaving little room to walk past.",
+          "object": "loaded pallet",
+          "bounding_box": [520, 300, 900, 690],
+          "requires_human_review": true,
+          "recommendation": "Move the pallet to its storage location before the aisle is used."
+        }
+      ]
+    },
+    { "timestamp_sec": 28, "findings": [] }
+  ]
+}

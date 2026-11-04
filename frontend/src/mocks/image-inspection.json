@@ -1,0 +1,45 @@
+{
+  "inspection_id": "mock-image",
+  "media_type": "image",
+  "status": "review_required",
+  "frame_width": 1600,
+  "frame_height": 900,
+  "duration_sec": 0,
+  "frames": [
+    {
+      "timestamp_sec": 0,
+      "findings": [
+        {
+          "category": "walkway_obstruction",
+          "severity": "high",
+          "observation": "Stacked cardboard boxes are sitting inside the marked pedestrian walkway.",
+          "evidence": "The boxes overlap the yellow floor line and cover most of the walkway width.",
+          "object": "stacked cardboard boxes",
+          "bounding_box": [520, 430, 900, 860],
+          "requires_human_review": true,
+          "recommendation": "Move the boxes to a designated storage area and keep the walkway clear."
+        },
+        {
+          "category": "walkway_obstruction",
+          "severity": "medium",
+          "observation": "A pallet jack appears to be parked in the aisle.",
+          "evidence": "The jack's handle and forks extend into the travel path with no operator nearby.",
+          "object": "pallet jack",
+          "bounding_box": [1050, 520, 1320, 840],
+          "requires_human_review": true,
+          "recommendation": "Return the pallet jack to its parking spot when not in use."
+        },
+        {
+          "category": "walkway_obstruction",
+          "severity": "low",
+          "observation": "Loose plastic wrap is lying near the edge of the walkway.",
+          "evidence": "A pile of clear film is visible on the floor beside the walkway line.",
+          "object": "loose plastic wrap",
+          "bounding_box": [180, 760, 420, 880],
+          "requires_human_review": true,
+          "recommendation": "Dispose of the wrap so it can't become a trip or slip hazard."
+        }
+      ]
+    }
+  ]
+}

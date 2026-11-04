@@ -51,6 +51,8 @@ cd frontend
 npm install
 ```
 
+Then copy `frontend/.env.example` to `frontend/.env.local` (`copy` on Windows, `cp` on Mac). With `VITE_USE_MOCK=true`, the Inspect page uses mock results and doesn't need the backend. Set it to `false` to call the real backend at `VITE_API_URL`. Restart `npm run dev` after changing it.
+
 ## Running
 
 Use two terminals. Start both from the repo root.

@@ -23,26 +23,37 @@ CURRENT STATUS (Oct 29)
 - Next: the agent loop and /api/inspect endpoint (backend), then the results UI (frontend).
 
 THE CONTRACT BETWEEN FRONTEND AND BACKEND
-POST /api/inspect (multipart, field "image") returns:
+POST /api/inspect (multipart, field "file": a JPG/PNG image or an MP4/MOV video, max 50 MB) returns:
 {
   "inspection_id": "string",
+  "media_type": "image" | "video",
   "status": "review_required" | "no_findings",
-  "image_width": number,
-  "image_height": number,
-  "findings": [
+  "frame_width": number,
+  "frame_height": number,
+  "duration_sec": number,
+  "frames": [
     {
-      "category": "walkway_obstruction",
-      "severity": "low" | "medium" | "high",
-      "observation": "string",
-      "evidence": "string",
-      "object": "string",
-      "bounding_box": [x1, y1, x2, y2],
-      "requires_human_review": boolean,
-      "recommendation": "string"
+      "timestamp_sec": number,
+      "findings": [
+        {
+          "category": "walkway_obstruction",
+          "severity": "low" | "medium" | "high",
+          "observation": "string",
+          "evidence": "string",
+          "object": "string",
+          "bounding_box": [x1, y1, x2, y2],
+          "requires_human_review": boolean,
+          "recommendation": "string"
+        }
+      ]
     }
   ]
 }
-bounding_box is always in ORIGINAL image pixels; the frontend scales it to the displayed image size.
+- An image, or a single camera/live frame, is one frame at timestamp_sec 0 (duration_sec 0).
+- A video has one entry per analyzed moment; frames with no findings may be included with an empty list.
+- bounding_box is always in ORIGINAL media pixels (frame_width x frame_height); the frontend scales it to the displayed size.
+- Camera snapshots and live-monitoring frames are sent to the same endpoint as JPEG images.
+- Transition note: the backend on quin/pipeline still returns the older flat shape (image_width/image_height + a top-level findings list) and reads the field "image". The frontend (src/api/inspect.ts) also accepts that flat shape for now, but the field name must change to "file" on one side for real requests to work.
 
 MY ROLE: FRONTEND
 1. Image upload (drag-and-drop + file picker, preview).
@@ -50,7 +61,7 @@ MY ROLE: FRONTEND
 3. Draw bounding boxes over the image, scaled correctly, labeled by finding.
 4. Show findings as cards: category, severity badge, observation, evidence, recommendation, "needs human review" tag.
 5. Handle "no findings" and error states clearly.
-Until the real endpoint exists, build against a mock: create frontend/src/mocks/inspection.json matching the contract above, with a toggle to switch between mock and real API.
+Until the real endpoint exists, build against a mock: frontend/src/mocks/image-inspection.json and video-inspection.json match the contract above. Set VITE_USE_MOCK=true in frontend/.env.local to use them (copy frontend/.env.example); otherwise the frontend calls VITE_API_URL (default http://localhost:8000).
 
 TEAM WORKFLOW
 - My teammate works on the backend; I work on the frontend.
