@@ -15,17 +15,28 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Surveillance-monitor backdrop: a slowly drifting grid plus faint scanlines. */
-.monitor-bg {
-  position: fixed;
+/* Surveillance-monitor effect: a slowly drifting grid plus faint scanlines.
+   .monitor-bg is the fixed page backdrop; .monitor-fx is the same effect
+   layered inside a section (e.g. on top of the hero image). */
+.monitor-bg,
+.monitor-fx {
   inset: 0;
-  z-index: -1;
   pointer-events: none;
   overflow: hidden;
+}
+
+.monitor-bg {
+  position: fixed;
+  z-index: -1;
   background-color: var(--color-ink);
 }
 
-.monitor-bg::before {
+.monitor-fx {
+  position: absolute;
+}
+
+.monitor-bg::before,
+.monitor-fx::before {
   content: "";
   position: absolute;
   inset: -48px;
@@ -37,7 +48,8 @@ html {
   mask-image: radial-gradient(ellipse at 50% 30%, black 30%, transparent 80%);
 }
 
-.monitor-bg::after {
+.monitor-bg::after,
+.monitor-fx::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -58,5 +70,7 @@ html {
 
 @media (prefers-reduced-motion: reduce) {
   .monitor-bg::before,
-  .monitor-bg::after { animation: none; }
+  .monitor-bg::after,
+  .monitor-fx::before,
+  .monitor-fx::after { animation: none; }
 }

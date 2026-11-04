@@ -44,12 +44,27 @@ export default function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden">
+      <section className="relative isolate overflow-hidden">
+        {/* Layers, back to front: photo, left gradient, yellow glow, bottom fade, grid/scanlines */}
+        <picture aria-hidden="true" className="absolute inset-0">
+          <source srcSet="/HomeMeta.webp" type="image/webp" />
+          <img src="/HomeMeta.png" alt="" className="h-full w-full object-cover object-center" fetchPriority="high" />
+        </picture>
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[420px] w-[680px] max-w-[120vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-safety/15 blur-[120px]"
+          className="absolute inset-0 bg-[linear-gradient(to_right,rgb(10_13_20/0.88)_0%,rgb(10_13_20/0.6)_45%,rgb(10_13_20/0.35)_100%)]"
         />
-        <div className="mx-auto max-w-4xl px-4 py-24 text-center sm:px-6 sm:py-32">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[680px] max-w-[120vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-safety/15 blur-[120px]"
+        />
+        {/* Bottom fade sits above the glow so the hero blends into the page with no seam */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(to_top,#0a0d14_0%,rgb(10_13_20/0.7)_30%,transparent_65%)]"
+        />
+        <div aria-hidden="true" className="monitor-fx" />
+        <div className="relative mx-auto max-w-4xl px-4 py-24 text-center sm:px-6 sm:py-32">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-safety/30 bg-safety/5 px-3 py-1 text-xs font-medium uppercase tracking-widest text-safety">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-safety" />
             Visual safety inspection
